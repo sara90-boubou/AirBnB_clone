@@ -16,6 +16,8 @@ import sys
 import unittest
 import console
 import inspect
+import cmd
+import json
 from datetime import datetime
 from time import sleep
 from models import storage
@@ -23,6 +25,8 @@ from models.engine.file_storage import FileStorage
 from console import HBNBCommand
 from io import StringIO
 from unittest.mock import patch
+from models.base_model import BaseModel
+from models import storage
 
 
 class TestHBNBCommand_prompting(unittest.TestCase):
@@ -667,6 +671,58 @@ class TestHBNBCommand_count(unittest.TestCase):
         with patch("sys.stdout", new=StringIO()) as output:
             self.assertFalse(HBNBCommand().onecmd("Review.count()"))
             self.assertEqual("1", output.getvalue().strip())
+
+
+class HBNBCommand(cmd.Cmd):
+    """Command interpreter class."""
+    prompt = "(hbnb) "
+
+    def do_update(self, arg):
+        """
+        Updates an instance based on the class name and id by adding or
+        updating attribute (save the change into the JSON file).
+        Usage: update <class name> <id> <attribute name> "<attribute value>"
+        """
+        args = arg.split()
+        if len(args) == 0:
+            print("** class name missing **")
+            return
+        class_name = args[0]
+        if class_name not in ["BaseModel"]:  # Add other classes as needed
+            print("** class doesn't exist **")
+            return
+        if len(args) == 1:
+            print("** instance id missing **")
+            return
+        instance_id = args[1]
+        key = "{}.{}".format(class_name, instance_id)
+        all_objects = storage.all()
+        if key not in all_objects:
+            print("** no instance found **")
+            return
+        if len(args) == 2:
+            print("** attribute name missing **")
+            return
+        attribute_name = args[2]
+        if len(args) == 3:
+            print("** value missing **")
+            return
+        attribute_value = args[3]
+        instance = all_objects[key]
+        setattr(instance, attribute_name, attribute_value)
+        instance.save()
+
+    def do_quit(self, arg):
+        """Quit command to exit the program."""
+        return True
+
+    def do_EOF(self, arg):
+        """EOF command to exit the program."""
+        return True
+
+    def emptyline(self):
+        """Do nothing on empty input line."""
+        pass
 
 
 if __name__ == "__main__":
