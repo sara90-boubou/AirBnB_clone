@@ -16,8 +16,6 @@ import sys
 import unittest
 import console
 import inspect
-import cmd
-import json
 from datetime import datetime
 from time import sleep
 from models import storage
@@ -25,8 +23,6 @@ from models.engine.file_storage import FileStorage
 from console import HBNBCommand
 from io import StringIO
 from unittest.mock import patch
-from models.base_model import BaseModel
-from models import storage
 
 
 class TestHBNBCommand_prompting(unittest.TestCase):
