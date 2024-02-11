@@ -3,11 +3,9 @@
 from models.base_model import BaseModel
 
 
-class User:
-    def __init__(self, username, email):
-        self.username = username
-        self.email = email
-
-    def display_user_info(self):
-        print(f"Username: {self.username}")
-        print(f"Email: {self.email}")
+class User(BaseModel):
+    """ Class user """
+    email = ""
+    password = ""
+    first_name = ""
+    last_name = ""
