@@ -70,14 +70,5 @@ class FileStorage:
                     for key, val in new_obj.items():
                         obj = self.class_dict[val['__class__']](**val)
                         type(self).__objects[key] = obj
-
-    def destroy(self):
-        """Deletes the current instance from storage"""
-        # Assuming __objects is the storage dictionary
-        # where instances are stored
-        key = "{}.{}".format(type(self).__name__, self.id)
-        if key in storage.all():
-            del storage.all()[key]
-            storage.save()
             except Exception:
                 pass
