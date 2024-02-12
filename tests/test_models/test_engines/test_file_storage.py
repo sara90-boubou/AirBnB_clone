@@ -1,69 +1,70 @@
 #!/usr/bin/python3
 """ Module of Unittests """
 import unittest
-from models.engine.file_storage import FileStorage
 from models.base_model import BaseModel
+from models.engine.file_storage import FileStorage
 from models import storage
 import os
 
 
-class TestFileStorage(unittest.TestCase):
+class FileStorageTests(unittest.TestCase):
+    """Suite of File Storage Tests"""
 
     def setUp(self):
-        """ Set up the test environment """
-        self.storage = FileStorage()
-        self.model_instance = BaseModel()
+        """Set up for each test case"""
+        self.my_model = BaseModel()
 
     def tearDown(self):
-        """ Clean up after the test """
-        if os.path.exists(self.storage._FileStorage__file_path):
-            os.remove(self.storage._FileStorage__file_path)
+        """Clean up after each test case"""
+        try:
+            os.remove(FileStorage._FileStorage__file_path)
+        except FileNotFoundError:
+            pass
 
-    def test_instance_creation(self):
-        """ Test if FileStorage instance is created """
-        self.assertIsInstance(self.storage, FileStorage)
+    def testStoreBaseModel(self):
+        """Test save and reload functions"""
+        self.my_model.save()
+        bm_dict = self.my_model.to_dict()
+        all_objs = storage.all()
 
-    def test_all_method(self):
-        """ Test the all() method """
-        all_objects = self.storage.all()
-        self.assertIsInstance(all_objects, dict)
+        key = bm_dict['__class__'] + "." + bm_dict['id']
+        self.assertEqual(key in all_objs, True)
 
-    def test_new_method(self):
-        """ Test the new() method """
-        key = "{}.{}".format(
-                type(self.model_instance).__name__, self.model_instance.id
-                )
-        self.assertNotIn(key, storage.all())
-        self.storage.new(self.model_instance)
-        self.assertIn(key, storage.all())
+    def testStoreBaseModel2(self):
+        """Test save, reload, and update functions"""
+        self.my_model.my_name = "First name"
+        self.my_model.save()
+        bm_dict = self.my_model.to_dict()
+        all_objs = storage.all()
 
-    def test_save_method(self):
-        """ Test the save() method """
-        key = "{}.{}".format(
-                type(self.model_instance).__name__, self.model_instance.id
-                )
-        self.model_instance.name = "Test Model"
-        self.storage.new(self.model_instance)
-        self.storage.save()
-        self.assertTrue(os.path.exists(self.storage._FileStorage__file_path))
-        with open(self.storage._FileStorage__file_path, 'r') as file:
-            file_content = file.read()
-            self.assertIn(key, file_content)
-            self.assertIn("Test Model", file_content)
+        key = bm_dict['__class__'] + "." + bm_dict['id']
 
-    def test_reload_method(self):
-        """ Test the reload() method """
-        key = "{}.{}".format(
-                type(self.model_instance).__name__, self.model_instance.id
-                )
-        self.model_instance.name = "Test Model"
-        self.storage.new(self.model_instance)
-        self.storage.save()
-        storage.reload()
-        all_objects = storage.all()
-        self.assertIn(key, all_objects)
-        reloaded_instance = all_objects[key]
-        self.assertEqual(reloaded_instance.name, "Test Model")
+        self.assertEqual(key in all_objs, True)
+        self.assertEqual(bm_dict['my_name'], "First name")
+
+        create1 = bm_dict['created_at']
+        update1 = bm_dict['updated_at']
+
+        self.my_model.my_name = "Second name"
+        self.my_model.save()
+        bm_dict = self.my_model.to_dict()
+        all_objs = storage.all()
+
+        self.assertEqual(key in all_objs, True)
+        create2 = bm_dict['created_at']
+        update2 = bm_dict['updated_at']
+
+        self.assertEqual(create1, create2)
+        self.assertNotEqual(update1, update2)
+        self.assertEqual(bm_dict['my_name'], "Second name")
+
+    def testSaveSelf(self):
+        """Check save self"""
+        msg = "save() takes 1 positional argument but 2 were given"
+        with self.assertRaises(TypeError) as e:
+            FileStorage.save(self, 100)
+
+        self.assertEqual(str(e.exception), msg)
 
 
 if __name__ == '__main__':
